@@ -1,0 +1,135 @@
+= CloudBees action: Invoke a AWS CodeDeploy Deployment
+
+Use this action to trigger an {AWS} (AWS) CodeDeploy deployment, a fully managed continuous delivery service, and fetch the run information as output.
+
+
+== Inputs
+
+[cols="2a,1a,1a,3a",options="header"]
+.Input details
+|===
+
+| Input name
+| Data type
+| Required?
+| Description
+
+| `application-name`
+| String
+| Yes
+| The name of an AWS CodeDeploy application .
+
+| `auto-rollback`
+| String
+| No
+| Configuration information for an automatic rollback that is added when a deployment is created.
+
+| `deployment-config-name`
+| String
+| Yes
+| The name of a deployment configuration.
+
+| `deployment-group-name`
+| String
+| Yes
+| The name of the deployment group.
+
+| `description`
+| String
+| Yes
+| A comment about the deployment.
+
+| `file-exists-behavior`
+| String
+| No
+| Information about how AWS CodeDeploy handles files that already exist in a deployment target location but weren't part of the previous successful deployment.
+
+| `ignore-application-stop-failures`
+| Boolean
+| No
+| If true, then if an ApplicationStop, BeforeBlockTraffic, or AfterBlockTraffic deployment lifecycle event to an instance fails, then the deployment continues to the next deployment lifecycle event.
+
+| `alarm-configuration-alarm-names`
+| String
+| No
+| The AWS role session name.
+
+| `appspec-content`
+| String
+| No
+| The content of an AppSpec file for an AWS Lambda or Amazon ECS deployment. The content is formatted as JSON or YAML and stored as a RawString.
+
+| `appspec-sha256`
+| String
+| No
+| The SHA256 hash value of the revision content.
+
+| `github-commit-id`
+| String
+| No
+| The SHA1 commit ID of the GitHub commit that represents the bundled artifacts for the application revision.
+
+| `github-repository`
+| String
+| No
+| The GitHub account and repository pair that stores a reference to the commit that represents the bundled artifacts for the application revision.
+
+| `s3-bucket`
+| String
+| No
+| The name of the Amazon S3 bucket where the application revision is stored.
+
+| `s3-bundle-type`
+| String
+| No
+| The file type of the application revision.
+
+| `s3-key`
+| String
+| No
+| The name of the Amazon S3 object that represents the bundled artifacts for the application revision.
+
+| `s3-bundle-type`
+| String
+| No
+| The file type of the application revision.
+
+| `s3-artifact-version`
+| String
+| No
+| A specific version of the Amazon S3 object that represents the bundled artifacts for the application revision.
+
+| `revision-type`
+| String
+| No
+| The type of application revision.
+
+|===
+
+== Usage examples
+
+[source,yaml]
+----
+      - name: Create AWS CodeDeploy deployment
+        uses: cloudbees-io/aws-codedeploy-invoke-actions@v1
+        with:
+          application-name: 'cb-sample-app'
+          description: "CodeDeploy-ec2-deployment"
+          deployment-group-name: 'cd-deployment-grp'
+          revision-type: 'S3'
+          s3-bucket: 'cb-codedeploy'
+          s3-key: 'Archive.zip'
+          s3-bundle-type: 'zip'
+          deployment-config-name: 'CodeDeployDefault.OneAtATime'
+----
+
+
+== License
+
+This code is made available under the 
+link:https://opensource.org/license/mit/[MIT license].
+
+== References
+
+* Learn more about link:https://docs.cloudbees.com/docs/cloudbees-saas-platform-actions/latest/[using actions in CloudBees workflows].
+* Learn about link:https://docs.cloudbees.com/docs/cloudbees-saas-platform/latest/[the CloudBees platform].

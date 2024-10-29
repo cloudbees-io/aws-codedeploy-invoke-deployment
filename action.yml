@@ -1,0 +1,79 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: action
+name: aws code deploy actions
+inputs:
+  application-name: 
+    description: 'application name'
+    required: true
+  description:  
+    description: 'description'
+    required: true
+  deployment-group-name:
+    description: 'deployment group name'
+    required: true
+  deployment-config-name: 
+    description: 'deployment configuration name'
+    required: true
+  ignore-application-stop-failures: 
+    description: 'Ignore application stop failures'
+    required: false
+  file-exists-behavior: 
+    description: 'File exists behavior'
+    required: false
+  alarm-configuration-alarm-names: 
+    description: 'Alarm configuration'
+    required: false
+  alarm-configuration-enabled:
+    description: 'Alarm configuration enabled'
+    required: false
+  alarm-configuration-ignore-poll-alarm-failure:
+    description: 'Alarm configuration ignore poll alarm failure'
+    required: false
+  s3-bucket:  
+    description: 'S3 bucket name'
+    required: false
+  s3-key: 
+    description: 'S3 key for the deployment package'
+    required: false
+  s3-bundle-type:
+    description: 'S3 bundle type'
+    required: false
+  s3-artifact-version:
+    description: 'S3 artifact version'
+    required: false
+  github-repository:
+    description: 'GitHub repository name'
+    required: false
+  github-commit-id:  
+    description: 'GitHub commit id'
+    required: false
+  auto-rollback: 
+    description: 'Enable auto rollback'
+    required: false
+  revision-type: 
+    description: 'Type of the revision (S3 or GitHub or AppSpec)'
+    required: true
+  appspec-content:
+    description: 'Content of the AppSpec file'
+    required: false
+
+    
+      
+runs:
+  using: composite
+  steps:
+    - id: invoke-aws-code-deploy-job
+      name: invoke-aws-code-codedeploy-job
+      uses: docker://public.ecr.aws/l7o7z1g8/actions/aws-codedeploy-invoke-actions:main-05754f57bb291daa8ed9e35463740562323c43b1
+      shell: sh
+      env:
+        CONFIG_JSON: '{"metaInfo":{"action":"AWS_CODEDEPLOY_ACTIONS","applicationName":"${{ inputs.application-name }}","description":"${{ inputs.description }}","deploymentGroupName":"${{ inputs.deployment-group-name }}","deploymentConfigName":"${{ inputs.deployment-config-name }}","revision":{"revisionType":"${{ inputs.revision-type }}","s3location":{"bucket":"${{ inputs.s3-bucket }}","key":"${{ inputs.s3-key }}","bundleType":"${{ inputs.s3-bundle-type }}"},"gitHubLocation":{"repository":"${{ inputs.github-repository }}","commitId":"${{ inputs.github-commit-id }}"},"appSpecLocation":{"content":"${{ inputs.appspec-content }}"}},"autoRollback":"${{ inputs.auto-rollback }}"}}'
+        RUN_ID: ${{ cloudbees.run_id }}
+        JOB_ID: ${{ job.id }}
+        STEP_ID: ${{ step.internal.id }}
+        DNS_URL: ${{ cloudbees.api.url }}
+        JWT_TOKEN: ${{ cloudbees.api.token }}
+      run: |
+        set -x
+        cd /app
+        ./aws_codedeploy_actions_app invoke -i $CONFIG_JSON
