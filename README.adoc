@@ -1,6 +1,6 @@
 = CloudBees action: Invoke a AWS CodeDeploy Deployment
 
-Use this action to trigger an {AWS} (AWS) CodeDeploy deployment, a fully managed continuous delivery service, and fetch the run information as output.
+Use this action to trigger an (AWS) CodeDeploy deployment, a fully managed continuous delivery service, and fetch the run information as output.
 
 
 == Inputs
@@ -19,10 +19,15 @@ Use this action to trigger an {AWS} (AWS) CodeDeploy deployment, a fully managed
 | Yes
 | The name of an AWS CodeDeploy application .
 
-| `auto-rollback`
+| `auto-rollback-enabled`
 | String
 | No
 | Configuration information for an automatic rollback that is added when a deployment is created.
+
+| `auto-rollback-events`
+| Json
+| No
+| The event type or types that trigger a rollback.
 
 | `deployment-config-name`
 | String
@@ -49,10 +54,15 @@ Use this action to trigger an {AWS} (AWS) CodeDeploy deployment, a fully managed
 | No
 | If true, then if an ApplicationStop, BeforeBlockTraffic, or AfterBlockTraffic deployment lifecycle event to an instance fails, then the deployment continues to the next deployment lifecycle event.
 
-| `alarm-configuration-alarm-names`
+| `override-alarm-names`
+| Json
+| No
+| A list of alarms configured for the deployment or deployment group.
+
+| `override-alarm-enabled`
 | String
 | No
-| The AWS role session name.
+| Indicates whether the alarm configuration is enabled.
 
 | `appspec-content`
 | String
@@ -60,6 +70,16 @@ Use this action to trigger an {AWS} (AWS) CodeDeploy deployment, a fully managed
 | The content of an AppSpec file for an AWS Lambda or Amazon ECS deployment. The content is formatted as JSON or YAML and stored as a RawString.
 
 | `appspec-sha256`
+| String
+| No
+| The SHA256 hash value of the revision content.
+
+| `string-content`
+| String
+| No
+| The content of an string input for an AWS Lambda or Amazon ECS deployment. The content is formatted as JSON or YAML and stored as a RawString.
+
+| `string-sha256`
 | String
 | No
 | The SHA256 hash value of the revision content.
@@ -89,11 +109,6 @@ Use this action to trigger an {AWS} (AWS) CodeDeploy deployment, a fully managed
 | No
 | The name of the Amazon S3 object that represents the bundled artifacts for the application revision.
 
-| `s3-bundle-type`
-| String
-| No
-| The file type of the application revision.
-
 | `s3-artifact-version`
 | String
 | No
@@ -101,17 +116,40 @@ Use this action to trigger an {AWS} (AWS) CodeDeploy deployment, a fully managed
 
 | `revision-type`
 | String
-| No
+| Yes
 | The type of application revision.
+
+| `target-auto-scaling-groups`
+| Json
+| No
+| The names of one or more Auto Scaling groups to identify a replacement environment for a blue/green deployment.
+
+| `target-instance-tag-filters`
+| Json
+| No
+| The tag filter key, type, and value used to identify Amazon EC2 instances in a replacement environment for a blue/green deployment.
+
+| `target-instance-tag-set`
+| Json
+| No
+| Information about the groups of Amazon EC2 instance tags.
 
 |===
 
 == Usage examples
 
+EC2 Deployment
 [source,yaml]
 ----
+      - id: login
+        name: Configure aws credentials
+        uses: cloudbees-io/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_CODEDEPLOY_ACTIONS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_CODEDEPLOY_ACTIONS_SECRET_ACCESS_KEY }}
       - name: Create AWS CodeDeploy deployment
-        uses: cloudbees-io/aws-codedeploy-invoke-actions@v1
+        uses: cloudbees-io/aws-codedeploy-invoke-deployment@v1
         with:
           application-name: 'cb-sample-app'
           description: "CodeDeploy-ec2-deployment"
@@ -120,6 +158,28 @@ Use this action to trigger an {AWS} (AWS) CodeDeploy deployment, a fully managed
           s3-bucket: 'cb-codedeploy'
           s3-key: 'Archive.zip'
           s3-bundle-type: 'zip'
+          deployment-config-name: 'CodeDeployDefault.OneAtATime'
+          target-instance-tag-filters: '[{"Key":"Name","Type":"KEY_AND_VALUE","Value":"cb-codedeploy-web"}]'
+----
+
+Lambda Deployment
+[source,yaml]
+----
+      - id: login
+        name: Configure aws credentials
+        uses: cloudbees-io/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_CODEDEPLOY_ACTIONS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_CODEDEPLOY_ACTIONS_SECRET_ACCESS_KEY }}
+      - name: Create AWS CodeDeploy deployment
+        uses: cloudbees-io/aws-codedeploy-invoke-deployment@v1
+        with:
+          application-name: 'cb-codedeploy-lamda-app'
+          description: "cb-codedeploy-lambda-grp-deployment"
+          deployment-group-name: 'cb-codedeploy-lambda-grp'
+          revision-type: 'AppSpecContent'
+          appspec-content: '{\"version\":\"0.0\",\"Resources\":[{\"MyLambdaFunction\":{\"Type\":\"AWS::Lambda::Function\",\"Properties\":{\"Name\":\"cb-codedeploy-lambda\",\"Alias\":\"cb-codedeploy-2\",\"CurrentVersion\":\"2\",\"TargetVersion\":\"1\"}}}]}'
           deployment-config-name: 'CodeDeployDefault.OneAtATime'
 ----
 
